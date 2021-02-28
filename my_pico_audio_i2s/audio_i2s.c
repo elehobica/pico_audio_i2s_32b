@@ -21,12 +21,6 @@ CU_REGISTER_DEBUG_PINS(audio_timing)
 //CU_SELECT_DEBUG_PINS(audio_timing)
 
 
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-#define i2s_dma_configure_size DMA_SIZE_16
-#else
-#define i2s_dma_configure_size DMA_SIZE_32
-#endif
-
 #define audio_pio __CONCAT(pio, PICO_AUDIO_I2S_PIO)
 #define GPIO_FUNC_PIOx __CONCAT(GPIO_FUNC_PIO, PICO_AUDIO_I2S_PIO)
 #define DREQ_PIOx_TX0 __CONCAT(__CONCAT(DREQ_PIO, PICO_AUDIO_I2S_PIO), _TX0)
@@ -35,6 +29,8 @@ CU_REGISTER_DEBUG_PINS(audio_timing)
 #define dma_channel_set_irqx_enabled __CONCAT(__CONCAT(dma_channel_set_irq, PICO_AUDIO_I2S_DMA_IRQ),_enabled)
 #define DMA_IRQ_x __CONCAT(DMA_IRQ_, PICO_AUDIO_I2S_DMA_IRQ)
 
+static const audio_format_t *_i2s_input_audio_format;
+static const audio_format_t *_i2s_output_audio_format;
 struct {
     audio_buffer_t *playing_buffer;
     uint32_t freq;
@@ -51,8 +47,10 @@ static audio_buffer_t silence_buffer;
 
 static void __isr __time_critical_func(audio_i2s_dma_irq_handler)();
 
-const audio_format_t *audio_i2s_setup(const audio_format_t *intended_audio_format,
+const audio_format_t *audio_i2s_setup(const audio_format_t *i2s_input_audio_format, const audio_format_t *i2s_output_audio_format,
                                                const audio_i2s_config_t *config) {
+    _i2s_input_audio_format = i2s_input_audio_format;
+    _i2s_output_audio_format = i2s_output_audio_format;
     uint func = GPIO_FUNC_PIOx;
     gpio_set_function(config->data_pin, func);
     gpio_set_function(config->clock_pin_base, func);
@@ -80,6 +78,46 @@ const audio_format_t *audio_i2s_setup(const audio_format_t *intended_audio_forma
     channel_config_set_dreq(&dma_config,
                             DREQ_PIOx_TX0 + sm
     );
+    size_t i2s_dma_configure_size;
+    if (_i2s_output_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+        switch (_i2s_output_audio_format->format) {
+            case AUDIO_PCM_FORMAT_S8:
+            case AUDIO_PCM_FORMAT_U8:
+                i2s_dma_configure_size = DMA_SIZE_8;
+                assert(false);
+                break;
+            case AUDIO_PCM_FORMAT_S16:
+            case AUDIO_PCM_FORMAT_U16:
+                i2s_dma_configure_size = DMA_SIZE_16;
+                assert(false);
+                break;
+            case AUDIO_PCM_FORMAT_S32:
+            case AUDIO_PCM_FORMAT_U32:
+                i2s_dma_configure_size = DMA_SIZE_32;
+                assert(false);
+                break;
+            default:
+                assert(false);
+                break;
+        }
+    } else {
+        switch (_i2s_output_audio_format->format) {
+            case AUDIO_PCM_FORMAT_S8:
+            case AUDIO_PCM_FORMAT_U8:
+                i2s_dma_configure_size = DMA_SIZE_16;
+                break;
+            case AUDIO_PCM_FORMAT_S16:
+            case AUDIO_PCM_FORMAT_U16:
+            case AUDIO_PCM_FORMAT_S32:
+            case AUDIO_PCM_FORMAT_U32:
+                i2s_dma_configure_size = DMA_SIZE_32;
+                break;
+            default:
+                assert(false);
+                break;
+        }
+
+    }
     channel_config_set_transfer_data_size(&dma_config, i2s_dma_configure_size);
     dma_channel_configure(dma_channel,
                           &dma_config,
@@ -91,7 +129,7 @@ const audio_format_t *audio_i2s_setup(const audio_format_t *intended_audio_forma
 
     irq_add_shared_handler(DMA_IRQ_x, audio_i2s_dma_irq_handler, PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
     dma_channel_set_irqx_enabled(dma_channel, 1);
-    return intended_audio_format;
+    return _i2s_output_audio_format;
 }
 
 static audio_buffer_pool_t *audio_i2s_consumer;
@@ -112,19 +150,19 @@ static audio_buffer_t *wrap_consumer_take(audio_connection_t *connection, bool b
     if (connection->producer_pool->format->sample_freq != shared_state.freq) {
         update_pio_frequency(connection->producer_pool->format->sample_freq);
     }
-#if PICO_AUDIO_I2S_MONO_INPUT
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-    return mono_to_mono_consumer_take(connection, block);
-#else
-    return mono_to_stereo_consumer_take(connection, block);
-#endif
-#else
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-    unsupported;
-#else
-    return stereo_to_stereo_consumer_take(connection, block);
-#endif
-#endif
+    if (_i2s_input_audio_format->format == _i2s_output_audio_format->format) {
+        if (_i2s_input_audio_format->channel_count == AUDIO_CHANNEL_MONO && _i2s_input_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+            return mono_to_mono_consumer_take(connection, block);
+        } else if (_i2s_input_audio_format->channel_count == AUDIO_CHANNEL_MONO && _i2s_input_audio_format->channel_count == AUDIO_CHANNEL_STEREO) {
+            return mono_to_stereo_consumer_take(connection, block);
+        } else if (_i2s_input_audio_format->channel_count == AUDIO_CHANNEL_STEREO && _i2s_input_audio_format->channel_count == AUDIO_CHANNEL_STEREO) {
+            return stereo_to_stereo_consumer_take(connection, block);
+        } else {
+            assert(false); // unsupported
+        }
+    } else {
+        assert(false); // unsupported
+    }
 }
 
 static void wrap_producer_give(audio_connection_t *connection, audio_buffer_t *buffer) {
@@ -132,21 +170,21 @@ static void wrap_producer_give(audio_connection_t *connection, audio_buffer_t *b
     if (connection->producer_pool->format->sample_freq != shared_state.freq) {
         update_pio_frequency(connection->producer_pool->format->sample_freq);
     }
-#if PICO_AUDIO_I2S_MONO_INPUT
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-    assert(false);
-//    return mono_to_mono_producer_give(connection, block);
-#else
-    assert(false);
-    //return mono_to_stereo_producer_give(connection, buffer);
-#endif
-#else
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-    unsupported;
-#else
-    return stereo_to_stereo_producer_give(connection, buffer);
-#endif
-#endif
+    if (_i2s_input_audio_format->format == _i2s_output_audio_format->format) {
+        if (_i2s_input_audio_format->channel_count == AUDIO_CHANNEL_MONO && _i2s_input_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+            assert(false);
+            //return mono_to_mono_producer_give(connection, block);
+        } else if (_i2s_input_audio_format->channel_count == AUDIO_CHANNEL_MONO && _i2s_input_audio_format->channel_count == AUDIO_CHANNEL_STEREO) {
+            assert(false);
+            //return mono_to_stereo_producer_give(connection, buffer);
+        } else if (_i2s_input_audio_format->channel_count == AUDIO_CHANNEL_STEREO && _i2s_input_audio_format->channel_count == AUDIO_CHANNEL_STEREO) {
+            return stereo_to_stereo_producer_give(connection, buffer);
+        } else {
+            assert(false); // unsupported
+        }
+    } else {
+        assert(false); // unsupported
+    }
 }
 
 static struct buffer_copying_on_consumer_take_connection m2s_audio_i2s_ct_connection = {
@@ -185,13 +223,24 @@ bool audio_i2s_connect_extra(audio_buffer_pool_t *producer, bool buffer_on_give,
     // todo we could do mono
     // todo we can't match exact, so we should return what we can do
     pio_i2s_consumer_format.sample_freq = producer->format->sample_freq;
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-    pio_i2s_consumer_format.channel_count = 1;
-    pio_i2s_consumer_buffer_format.sample_stride = 2;
-#else
-    pio_i2s_consumer_format.channel_count = 2;
-    pio_i2s_consumer_buffer_format.sample_stride = 4;
-#endif
+    pio_i2s_consumer_format.channel_count = _i2s_output_audio_format->channel_count;
+    switch (_i2s_output_audio_format->format) {
+        case AUDIO_PCM_FORMAT_S8:
+        case AUDIO_PCM_FORMAT_U8:
+            pio_i2s_consumer_buffer_format.sample_stride = pio_i2s_consumer_format.channel_count;
+            break;
+        case AUDIO_PCM_FORMAT_S16:
+        case AUDIO_PCM_FORMAT_U16:
+            pio_i2s_consumer_buffer_format.sample_stride = 2 * pio_i2s_consumer_format.channel_count;
+            break;
+        case AUDIO_PCM_FORMAT_S32:
+        case AUDIO_PCM_FORMAT_U32:
+            pio_i2s_consumer_buffer_format.sample_stride = 4 * pio_i2s_consumer_format.channel_count;
+            break;
+        default:
+            assert(false);
+            break;
+    }
 
     audio_i2s_consumer = audio_new_consumer_pool(&pio_i2s_consumer_buffer_format, buffer_count, samples_per_buffer);
 
@@ -201,24 +250,22 @@ bool audio_i2s_connect_extra(audio_buffer_pool_t *producer, bool buffer_on_give,
     __mem_fence_release();
 
     if (!connection) {
-        if (producer->format->channel_count == 2) {
-#if PICO_AUDIO_I2S_MONO_INPUT
-            panic("need to merge channels down\n");
-#else
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-            panic("trying to play stereo thru mono not yet supported");
-#else
-            printf("Copying stereo to stereo at %d Hz\n", (int) producer->format->sample_freq);
-#endif
-#endif
+        if (producer->format->channel_count == AUDIO_CHANNEL_STEREO) {
+            if (_i2s_input_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+                panic("need to merge channels down\n");
+            } else if (_i2s_output_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+                panic("trying to play stereo thru mono not yet supported");
+            } else {
+                printf("Copying stereo to stereo at %d Hz\n", (int) producer->format->sample_freq);
+            }
             // todo we should support pass thru option anyway
             printf("TODO... not completing stereo audio connection properly!\n");
         } else {
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-            printf("Copying mono to mono at %d Hz\n", (int) producer->format->sample_freq);
-#else
-            printf("Converting mono to stereo at %d Hz\n", (int) producer->format->sample_freq);
-#endif
+            if (_i2s_output_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+                printf("Copying mono to mono at %d Hz\n", (int) producer->format->sample_freq);
+            } else {
+                printf("Converting mono to stereo at %d Hz\n", (int) producer->format->sample_freq);
+            }
         }
         connection = buffer_on_give ? &m2s_audio_i2s_pg_connection.core : &m2s_audio_i2s_ct_connection.core;
     }
@@ -226,13 +273,18 @@ bool audio_i2s_connect_extra(audio_buffer_pool_t *producer, bool buffer_on_give,
     return true;
 }
 
-static struct buffer_copying_on_consumer_take_connection m2s_audio_i2s_connection_s8 = {
+static struct buffer_copying_on_consumer_take_connection m2s_audio_i2s_connection_s8_mono = {
         .core = {
-#if PICO_AUDIO_I2S_MONO_OUTPUT
                 .consumer_pool_take = mono_s8_to_mono_consumer_take,
-#else
+                .consumer_pool_give = consumer_pool_give_buffer_default,
+                .producer_pool_take = producer_pool_take_buffer_default,
+                .producer_pool_give = producer_pool_give_buffer_default,
+        }
+};
+
+static struct buffer_copying_on_consumer_take_connection m2s_audio_i2s_connection_s8_stereo = {
+        .core = {
                 .consumer_pool_take = mono_s8_to_stereo_consumer_take,
-#endif
                 .consumer_pool_give = consumer_pool_give_buffer_default,
                 .producer_pool_take = producer_pool_take_buffer_default,
                 .producer_pool_give = producer_pool_give_buffer_default,
@@ -248,13 +300,24 @@ bool audio_i2s_connect_s8(audio_buffer_pool_t *producer) {
     // todo we could do mono
     // todo we can't match exact, so we should return what we can do
     pio_i2s_consumer_format.sample_freq = producer->format->sample_freq;
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-    pio_i2s_consumer_format.channel_count = 1;
-    pio_i2s_consumer_buffer_format.sample_stride = 2;
-#else
-    pio_i2s_consumer_format.channel_count = 2;
-    pio_i2s_consumer_buffer_format.sample_stride = 4;
-#endif
+    pio_i2s_consumer_format.channel_count = _i2s_output_audio_format->channel_count;
+    switch (_i2s_output_audio_format->format) {
+        case AUDIO_PCM_FORMAT_S8:
+        case AUDIO_PCM_FORMAT_U8:
+            pio_i2s_consumer_buffer_format.sample_stride = 1 * pio_i2s_consumer_format.channel_count;
+            break;
+        case AUDIO_PCM_FORMAT_S16:
+        case AUDIO_PCM_FORMAT_U16:
+            pio_i2s_consumer_buffer_format.sample_stride = 2 * pio_i2s_consumer_format.channel_count;
+            break;
+        case AUDIO_PCM_FORMAT_S32:
+        case AUDIO_PCM_FORMAT_U32:
+            pio_i2s_consumer_buffer_format.sample_stride = 4 * pio_i2s_consumer_format.channel_count;
+            break;
+        default:
+            assert(false);
+            break;
+    }
 
     // we do this on take so should do it quickly...
     uint samples_per_buffer = 256;
@@ -271,20 +334,21 @@ bool audio_i2s_connect_s8(audio_buffer_pool_t *producer) {
     __mem_fence_release();
 
     audio_connection_t *connection;
-    if (producer->format->channel_count == 2) {
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-        panic("trying to play stereo thru mono not yet supported");
-#endif
+    if (producer->format->channel_count == AUDIO_CHANNEL_STEREO) {
+        if (_i2s_output_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+            panic("trying to play stereo thru mono not yet supported");
+        }
         // todo we should support pass thru option anyway
         printf("TODO... not completing stereo audio connection properly!\n");
-        connection = &m2s_audio_i2s_connection_s8.core;
+        connection = &m2s_audio_i2s_connection_s8_stereo.core;
     } else {
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-        printf("Copying mono to mono at %d Hz\n", (int) producer->format->sample_freq);
-#else
-        printf("Converting mono to stereo at %d Hz\n", (int) producer->format->sample_freq);
-#endif
-        connection = &m2s_audio_i2s_connection_s8.core;
+        if (_i2s_output_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+            printf("Copying mono to mono at %d Hz\n", (int) producer->format->sample_freq);
+            connection = &m2s_audio_i2s_connection_s8_mono.core;
+        } else {
+            printf("Converting mono to stereo at %d Hz\n", (int) producer->format->sample_freq);
+            connection = &m2s_audio_i2s_connection_s8_stereo.core;
+        }
     }
     audio_complete_connection(connection, producer, audio_i2s_consumer);
     return true;
@@ -306,13 +370,13 @@ static inline void audio_start_dma_transfer() {
     assert(ab->sample_count);
     // todo better naming of format->format->format!!
     assert(ab->format->format->format == AUDIO_PCM_FORMAT_S16);
-#if PICO_AUDIO_I2S_MONO_OUTPUT
-    assert(ab->format->format->channel_count == 1);
-    assert(ab->format->sample_stride == 2);
-#else
-    assert(ab->format->format->channel_count == 2);
-    assert(ab->format->sample_stride == 4);
-#endif
+    if (_i2s_output_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
+        assert(ab->format->format->channel_count == AUDIO_CHANNEL_MONO);
+        //assert(ab->format->sample_stride == 2);
+    } else {
+        assert(ab->format->format->channel_count == AUDIO_CHANNEL_STEREO);
+        //assert(ab->format->sample_stride == 4);
+    }
     dma_channel_transfer_from_buffer_now(shared_state.dma_channel, ab->buffer->bytes, ab->sample_count);
 }
 

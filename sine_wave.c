@@ -31,7 +31,7 @@
 
 static int16_t sine_wave_table[SINE_WAVE_TABLE_LEN];
 
-struct audio_buffer_pool *init_audio() {
+audio_buffer_pool_t *init_audio() {
 
     static audio_format_t audio_format = {
             .format = AUDIO_PCM_FORMAT_S16,
@@ -39,24 +39,24 @@ struct audio_buffer_pool *init_audio() {
             .channel_count = 2
     };
 
-    static struct audio_buffer_format producer_format = {
+    static audio_buffer_format_t producer_format = {
             .format = &audio_format,
             .sample_stride = 4
     };
 
-    struct audio_buffer_pool *producer_pool = audio_new_producer_pool(&producer_format, 3,
+    audio_buffer_pool_t *producer_pool = audio_new_producer_pool(&producer_format, 3,
                                                                       SAMPLES_PER_BUFFER); // todo correct size
     bool __unused ok;
-    const struct audio_format *output_format;
+    const audio_format_t *output_format;
 #if USE_AUDIO_I2S
-    struct audio_i2s_config config = {
+    audio_i2s_config_t config = {
             .data_pin = PICO_AUDIO_I2S_DATA_PIN,
             .clock_pin_base = PICO_AUDIO_I2S_CLOCK_PIN_BASE,
             .dma_channel = 0,
             .pio_sm = 0
     };
 
-    output_format = audio_i2s_setup(&audio_format, &config);
+    output_format = audio_i2s_setup(&audio_format, &audio_format, &config);
     if (!output_format) {
         panic("PicoAudio: Unable to open audio device.\n");
     }
@@ -98,7 +98,7 @@ int main() {
         sine_wave_table[i] = 32767 * cosf(i * 2 * (float) (M_PI / SINE_WAVE_TABLE_LEN));
     }
 
-    struct audio_buffer_pool *ap = init_audio();
+    audio_buffer_pool_t *ap = init_audio();
     uint32_t step = 0x200000;
     uint32_t pos = 0;
     uint32_t pos_max = 0x10000 * SINE_WAVE_TABLE_LEN;
@@ -130,7 +130,7 @@ int main() {
             printf("vol = %d, step = %d      \r", vol, step >> 16);
 #endif
         }
-        struct audio_buffer *buffer = take_audio_buffer(ap, true);
+        audio_buffer_t *buffer = take_audio_buffer(ap, true);
         int16_t *samples = (int16_t *) buffer->buffer->bytes;
         for (uint i = 0; i < buffer->max_sample_count; i++) {
             int16_t value = (vol * sine_wave_table[pos >> 16u]) >> 8u;

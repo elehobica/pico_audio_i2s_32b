@@ -32,8 +32,6 @@ target_link_libraries(${bin_name} PRIVATE
 )
 
 target_compile_definitions(${bin_name} PRIVATE
-    # compile time configuration of I2S
-    #PICO_AUDIO_I2S_MONO_INPUT=1
     #define for our example code
     USE_AUDIO_I2S=1
 )

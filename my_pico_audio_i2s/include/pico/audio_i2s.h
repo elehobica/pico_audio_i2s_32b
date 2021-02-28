@@ -89,13 +89,6 @@ extern "C" {
 #endif
 #endif
 
-#ifndef PICO_AUDIO_I2S_MONO_INPUT
-#define PICO_AUDIO_I2S_MONO_INPUT 0
-#endif
-#ifndef PICO_AUDIO_I2S_MONO_OUTPUT
-#define PICO_AUDIO_I2S_MONO_OUTPUT 0
-#endif
-
 #ifndef PICO_AUDIO_I2S_DATA_PIN
 //#warning PICO_AUDIO_I2S_DATA_PIN should be defined when using AUDIO_I2S
 #define PICO_AUDIO_I2S_DATA_PIN 28
@@ -120,10 +113,10 @@ typedef struct audio_i2s_config {
 /** \brief Set up system to output I2S audio
  * \ingroup pico_audio_i2s
  *
- * \param intended_audio_format \todo
+ * \param i2s_audio_format \todo
  * \param config The configuration to apply.
  */
-const audio_format_t *audio_i2s_setup(const audio_format_t *intended_audio_format,
+const audio_format_t *audio_i2s_setup(const audio_format_t *i2s_input_audio_format, const audio_format_t *i2s_output_audio_format,
                                                const audio_i2s_config_t *config);
 
 

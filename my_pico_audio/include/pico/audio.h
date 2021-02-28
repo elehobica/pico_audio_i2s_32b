@@ -46,12 +46,17 @@ typedef enum {
     AUDIO_PCM_FORMAT_U8          ///< unsigned 16bit PCM
 } audio_pcm_format_t;
 
+typedef enum {
+    AUDIO_CHANNEL_MONO = 1,
+    AUDIO_CHANNEL_STEREO = 2
+} audio_channel_t;
+
 /** \brief Audio format definition
  */
 typedef struct audio_format {
     uint32_t sample_freq; ///< Sample frequency in Hz
     audio_pcm_format_t format; ///< Audio format \ref audio_formats
-    uint16_t channel_count; ///< Number of channels
+    audio_channel_t channel_count; ///< Number of channels
 } audio_format_t;
 
 /** \brief Audio buffer format definition
