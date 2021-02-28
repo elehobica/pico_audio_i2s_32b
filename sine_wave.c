@@ -27,7 +27,7 @@
 #endif
 
 #define SINE_WAVE_TABLE_LEN 2048
-#define SAMPLES_PER_BUFFER 256
+#define SAMPLES_PER_BUFFER 1024 // Samples / channel
 
 static int16_t sine_wave_table[SINE_WAVE_TABLE_LEN];
 
@@ -36,12 +36,12 @@ struct audio_buffer_pool *init_audio() {
     static audio_format_t audio_format = {
             .format = AUDIO_BUFFER_FORMAT_PCM_S16,
             .sample_freq = 44100,
-            .channel_count = 1,
+            .channel_count = 2
     };
 
     static struct audio_buffer_format producer_format = {
             .format = &audio_format,
-            .sample_stride = 2
+            .sample_stride = 4
     };
 
     struct audio_buffer_pool *producer_pool = audio_new_producer_pool(&producer_format, 3,
@@ -53,7 +53,7 @@ struct audio_buffer_pool *init_audio() {
             .data_pin = PICO_AUDIO_I2S_DATA_PIN,
             .clock_pin_base = PICO_AUDIO_I2S_CLOCK_PIN_BASE,
             .dma_channel = 0,
-            .pio_sm = 0,
+            .pio_sm = 0
     };
 
     output_format = audio_i2s_setup(&audio_format, &config);
@@ -133,7 +133,9 @@ int main() {
         struct audio_buffer *buffer = take_audio_buffer(ap, true);
         int16_t *samples = (int16_t *) buffer->buffer->bytes;
         for (uint i = 0; i < buffer->max_sample_count; i++) {
-            samples[i] = (vol * sine_wave_table[pos >> 16u]) >> 8u;
+            int16_t value = (vol * sine_wave_table[pos >> 16u]) >> 8u;
+            samples[i*2+0] = value;
+            samples[i*2+1] = value;
             pos += step;
             if (pos >= pos_max) pos -= pos_max;
         }
