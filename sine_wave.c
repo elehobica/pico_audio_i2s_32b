@@ -34,7 +34,7 @@ static int16_t sine_wave_table[SINE_WAVE_TABLE_LEN];
 struct audio_buffer_pool *init_audio() {
 
     static audio_format_t audio_format = {
-            .format = AUDIO_BUFFER_FORMAT_PCM_S16,
+            .format = AUDIO_PCM_FORMAT_S16,
             .sample_freq = 44100,
             .channel_count = 2
     };

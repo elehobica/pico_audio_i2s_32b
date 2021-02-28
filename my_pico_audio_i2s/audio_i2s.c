@@ -180,8 +180,8 @@ bool audio_i2s_connect_extra(audio_buffer_pool_t *producer, bool buffer_on_give,
     printf("Connecting PIO I2S audio\n");
 
     // todo we need to pick a connection based on the frequency - e.g. 22050 can be more simply upsampled to 44100
-    assert(producer->format->format == AUDIO_BUFFER_FORMAT_PCM_S16);
-    pio_i2s_consumer_format.format = AUDIO_BUFFER_FORMAT_PCM_S16;
+    assert(producer->format->format == AUDIO_PCM_FORMAT_S16);
+    pio_i2s_consumer_format.format = AUDIO_PCM_FORMAT_S16;
     // todo we could do mono
     // todo we can't match exact, so we should return what we can do
     pio_i2s_consumer_format.sample_freq = producer->format->sample_freq;
@@ -243,8 +243,8 @@ bool audio_i2s_connect_s8(audio_buffer_pool_t *producer) {
     printf("Connecting PIO I2S audio (U8)\n");
 
     // todo we need to pick a connection based on the frequency - e.g. 22050 can be more simply upsampled to 44100
-    assert(producer->format->format == AUDIO_BUFFER_FORMAT_PCM_S8);
-    pio_i2s_consumer_format.format = AUDIO_BUFFER_FORMAT_PCM_S16;
+    assert(producer->format->format == AUDIO_PCM_FORMAT_S8);
+    pio_i2s_consumer_format.format = AUDIO_PCM_FORMAT_S16;
     // todo we could do mono
     // todo we can't match exact, so we should return what we can do
     pio_i2s_consumer_format.sample_freq = producer->format->sample_freq;
@@ -305,7 +305,7 @@ static inline void audio_start_dma_transfer() {
     }
     assert(ab->sample_count);
     // todo better naming of format->format->format!!
-    assert(ab->format->format->format == AUDIO_BUFFER_FORMAT_PCM_S16);
+    assert(ab->format->format->format == AUDIO_PCM_FORMAT_S16);
 #if PICO_AUDIO_I2S_MONO_OUTPUT
     assert(ab->format->format->channel_count == 1);
     assert(ab->format->sample_stride == 2);
