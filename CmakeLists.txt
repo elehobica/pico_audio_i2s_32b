@@ -15,6 +15,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
 
+add_subdirectory(my_pico_audio)
+add_subdirectory(my_pico_audio_i2s)
+
 set(bin_name "sine_wave")
 add_executable(${bin_name}
     sine_wave.c
@@ -25,7 +28,7 @@ pico_enable_stdio_uart(${bin_name} 1)
 
 target_link_libraries(${bin_name} PRIVATE
     pico_stdlib
-    pico_audio_i2s
+    my_pico_audio_i2s
 )
 
 target_compile_definitions(${bin_name} PRIVATE
