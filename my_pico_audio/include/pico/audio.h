@@ -55,7 +55,7 @@ typedef enum {
  */
 typedef struct audio_format {
     uint32_t sample_freq; ///< Sample frequency in Hz
-    audio_pcm_format_t format; ///< Audio format \ref audio_formats
+    audio_pcm_format_t pcm_format; ///< Audio format \ref audio_formats
     audio_channel_t channel_count; ///< Number of channels
 } audio_format_t;
 
@@ -285,7 +285,12 @@ audio_buffer_t *mono_s8_to_mono_consumer_take(audio_connection_t *connection, bo
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *stereo_to_stereo_consumer_take(audio_connection_t *connection, bool block);
+audio_buffer_t *stereo_s16_to_stereo_s16_consumer_take(audio_connection_t *connection, bool block);
+
+/*! \brief \todo
+ *  \ingroup pico_audio
+ */
+audio_buffer_t *stereo_s32_to_stereo_s32_consumer_take(audio_connection_t *connection, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
@@ -300,7 +305,12 @@ audio_buffer_t *mono_s8_to_stereo_consumer_take(audio_connection_t *connection, 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-void stereo_to_stereo_producer_give(audio_connection_t *connection, audio_buffer_t *buffer);
+void stereo_s16_to_stereo_s16_producer_give(audio_connection_t *connection, audio_buffer_t *buffer);
+
+/*! \brief \todo
+ *  \ingroup pico_audio
+ */
+void stereo_s32_to_stereo_s32_producer_give(audio_connection_t *connection, audio_buffer_t *buffer);
 
 // not worth a separate header for now
 typedef struct __packed pio_audio_channel_config {

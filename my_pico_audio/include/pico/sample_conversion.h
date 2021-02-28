@@ -32,6 +32,12 @@ typedef struct : public FmtDetails<uint16_t> {
 typedef struct : public FmtDetails<int16_t> {
 } FmtS16;
 
+typedef struct : public FmtDetails<uint32_t> {
+} FmtU32;
+
+typedef struct : public FmtDetails<int32_t> {
+} FmtS32;
+
 // Multi channel is just N samples back to back
 template<typename Fmt, uint ChannelCount>
 struct MultiChannelFmt {

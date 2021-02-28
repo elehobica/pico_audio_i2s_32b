@@ -33,14 +33,14 @@ bitloop1:           ;        ||
     out pins, 1       side 0b10
     jmp x-- bitloop1  side 0b11
     out pins, 1       side 0b00
-    set x, 14         side 0b01
+    set x, 30         side 0b01
 
 bitloop0:
     out pins, 1       side 0b00
     jmp x-- bitloop0  side 0b01
     out pins, 1       side 0b10
 public entry_point:
-    set x, 14         side 0b11
+    set x, 30         side 0b11
 
 % c-sdk {
 
