@@ -9,6 +9,7 @@
 
 #if PICO_ON_DEVICE
 
+#include "hardware/pll.h"
 #include "hardware/clocks.h"
 #include "hardware/structs/clocks.h"
 
@@ -92,6 +93,28 @@ int main() {
 #endif
 #endif
 
+    stdio_init_all();
+
+    // Set PLL_USB 96MHz
+    pll_init(pll_usb, 1, 1536 * MHZ, 4, 4);
+    clock_configure(clk_usb,
+        0,
+        CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,
+        96 * MHZ,
+        48 * MHZ);
+    // Change clk_sys to be 96MHz.
+    clock_configure(clk_sys,
+        CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX,
+        CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,
+        96 * MHZ,
+        96 * MHZ);
+    // CLK peri is clocked from clk_sys so need to change clk_peri's freq
+    clock_configure(clk_peri,
+        0,
+        CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS,
+        96 * MHZ,
+        96 * MHZ);
+    // Reinit uart now that clk_peri has changed
     stdio_init_all();
 
     for (int i = 0; i < SINE_WAVE_TABLE_LEN; i++) {

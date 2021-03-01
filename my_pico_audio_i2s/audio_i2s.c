@@ -163,10 +163,18 @@ static void update_pio_frequency(uint32_t sample_freq, audio_pcm_format_t pcm_fo
             assert(false);
             break;
     }
-    float pio_freq = (float) system_clock_frequency * 256 / divider;
-    printf("System clock at %u Hz, I2S clock divider %d/256 = %7.4f Hz\n", (uint) system_clock_frequency, (uint) divider, pio_freq);
     assert(divider < 0x1000000);
-    pio_sm_set_clkdiv_int_frac(audio_pio, shared_state.pio_sm, divider >> 8u, divider & 0xffu);
+#if 0 // PIO_CLK_DIV_FRAC
+    float pio_freq = (float) system_clock_frequency * 256 / divider; // frac
+    printf("System clock at %u Hz, I2S clock divider %d/256: PIO freq %7.4f Hz\n", (uint) system_clock_frequency, (uint) divider, pio_freq);
+    pio_sm_set_clkdiv_int_frac(audio_pio, shared_state.pio_sm, divider >> 8u, divider & 0xffu); // This scheme includes clock Jitter
+#else
+    divider >>= 8u;
+    float pio_freq = (float) system_clock_frequency / divider; // no frac
+    printf("System clock at %u Hz, I2S clock divider %d: PIO freq %7.4f Hz\n", (uint) system_clock_frequency, (uint) divider, pio_freq);
+    pio_sm_set_clkdiv(audio_pio, shared_state.pio_sm, divider); // No Jitter. but clock freq accuracy depends on PIO source clock freq
+#endif
+
     shared_state.freq = sample_freq;
 }
 
@@ -302,7 +310,7 @@ bool audio_i2s_connect_extra(audio_buffer_pool_t *producer, bool buffer_on_give,
                 printf("Copying stereo to stereo at %d Hz\n", (int) producer->format->sample_freq);
             }
             // todo we should support pass thru option anyway
-            printf("TODO... not completing stereo audio connection properly!\n");
+            //printf("TODO... not completing stereo audio connection properly!\n");
         } else {
             if (_i2s_output_audio_format->channel_count == AUDIO_CHANNEL_MONO) {
                 printf("Copying mono to mono at %d Hz\n", (int) producer->format->sample_freq);
