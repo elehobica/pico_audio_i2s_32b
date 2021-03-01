@@ -122,8 +122,10 @@ int main() {
     }
 
     audio_buffer_pool_t *ap = init_audio();
-    uint32_t step = 0x200000;
-    uint32_t pos = 0;
+    uint32_t step0 = 0x200000;
+    uint32_t step1 = 0x200000;
+    uint32_t pos0 = 0;
+    uint32_t pos1 = 0;
     uint32_t pos_max = 0x10000 * SINE_WAVE_TABLE_LEN;
     uint vol = 128;
     while (true) {
@@ -134,8 +136,10 @@ int main() {
         if (c >= 0) {
             if (c == '-' && vol) vol -= 4;
             if ((c == '=' || c == '+') && vol < 255) vol += 4;
-            if (c == '[' && step > 0x10000) step -= 0x10000;
-            if (c == ']' && step < (SINE_WAVE_TABLE_LEN / 16) * 0x20000) step += 0x10000;
+            if (c == '[' && step0 > 0x10000) step0 -= 0x10000;
+            if (c == ']' && step0 < (SINE_WAVE_TABLE_LEN / 16) * 0x20000) step0 += 0x10000;
+            if (c == '{' && step1 > 0x10000) step1 -= 0x10000;
+            if (c == '}' && step1 < (SINE_WAVE_TABLE_LEN / 16) * 0x20000) step1 += 0x10000;
             if (c == 'q') break;
 #if USE_AUDIO_PWM
             if (c == 'c') {
@@ -148,19 +152,22 @@ int main() {
                     done = audio_pwm_set_correction_mode(m);
                 }
             }
-            printf("vol = %d, step = %d mode = %d      \r", vol, step >>16, m);
+            printf("vol = %d, step0 = %d, step1 = %d mode = %d      \r", vol, step0 >> 16, step1 >> 16, m);
 #else
-            printf("vol = %d, step = %d      \r", vol, step >> 16);
+            printf("vol = %d, step0 = %d, step1 = %d      \r", vol, step0 >> 16, step1 >> 16);
 #endif
         }
         audio_buffer_t *buffer = take_audio_buffer(ap, true);
         int32_t *samples = (int32_t *) buffer->buffer->bytes;
         for (uint i = 0; i < buffer->max_sample_count; i++) {
-            int32_t value = (vol * sine_wave_table[pos >> 16u]) << 8u;
-            samples[i*2+0] = value;     // L
-            samples[i*2+1] = value;     // R
-            pos += step;
-            if (pos >= pos_max) pos -= pos_max;
+            int32_t value0 = (vol * sine_wave_table[pos0 >> 16u]) << 8u;
+            int32_t value1 = (vol * sine_wave_table[pos1 >> 16u]) << 8u;
+            samples[i*2+0] = value0 / 32;     // L
+            samples[i*2+1] = value1;     // R
+            pos0 += step0;
+            pos1 += step1;
+            if (pos0 >= pos_max) pos0 -= pos_max;
+            if (pos1 >= pos_max) pos1 -= pos_max;
         }
         buffer->sample_count = buffer->max_sample_count;
         give_audio_buffer(ap, buffer);

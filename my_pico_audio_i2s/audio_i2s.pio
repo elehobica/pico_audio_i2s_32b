@@ -36,17 +36,17 @@
                     ;        /--- LRCLK
                     ;        |/-- BCLK
 bitloop1:           ;        ||
-    out pins, 1       side 0b10
-    jmp x-- bitloop1  side 0b11
     out pins, 1       side 0b00
-    mov x, isr        side 0b01
+    jmp x-- bitloop1  side 0b01
+    out pins, 1       side 0b10
+    mov x, isr        side 0b11
 
 bitloop0:
-    out pins, 1       side 0b00
-    jmp x-- bitloop0  side 0b01
     out pins, 1       side 0b10
+    jmp x-- bitloop0  side 0b11
+    out pins, 1       side 0b00
 public entry_point:
-    mov x, isr        side 0b11
+    mov x, isr        side 0b01
 
 % c-sdk {
 
