@@ -134,8 +134,8 @@ int main() {
 #endif
         int c = getchar_timeout_us(0);
         if (c >= 0) {
-            if (c == '-' && vol) vol -= 4;
-            if ((c == '=' || c == '+') && vol < 255) vol += 4;
+            if (c == '-' && vol) vol--;
+            if ((c == '=' || c == '+') && vol < 256) vol++;
             if (c == '[' && step0 > 0x10000) step0 -= 0x10000;
             if (c == ']' && step0 < (SINE_WAVE_TABLE_LEN / 16) * 0x20000) step0 += 0x10000;
             if (c == '{' && step1 > 0x10000) step1 -= 0x10000;
@@ -162,8 +162,9 @@ int main() {
         for (uint i = 0; i < buffer->max_sample_count; i++) {
             int32_t value0 = (vol * sine_wave_table[pos0 >> 16u]) << 8u;
             int32_t value1 = (vol * sine_wave_table[pos1 >> 16u]) << 8u;
-            samples[i*2+0] = value0 / 32;     // L
-            samples[i*2+1] = value1;     // R
+            // use 32bit full scale
+            samples[i*2+0] = value0 + (value0 >> 16u);  // L
+            samples[i*2+1] = value1 + (value1 >> 16u);  // R
             pos0 += step0;
             pos1 += step1;
             if (pos0 >= pos_max) pos0 -= pos_max;
