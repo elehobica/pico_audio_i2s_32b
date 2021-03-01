@@ -1,7 +1,7 @@
 # Raspberry Pi Pico sine_wave with 32bit I2S DAC
 
 ## Overview
-This project is an example for Raspberry Pi Pico to support 32bit/Stereo I2C DAC.  
+This project is an example for Raspberry Pi Pico to support 32bit/Stereo I2S DAC.  
 The sample project included in [pico-playground/audio/sine_wave](https://github.com/raspberrypi/pico-playground/tree/master/audio/sine_wave) supports only 16bit I2S DAC in mono to stereo copy mode.  
 This project supports:
 * 32bit Stereo I2S (PCM5102)
@@ -35,7 +35,7 @@ In addition to original connection
 ```
 > git clone -b master https://github.com/raspberrypi/pico-sdk.git
 > cd pico-sdk
-> git submodule update --i
+> git submodule update -i
 > cd ..
 > git clone -b master https://github.com/raspberrypi/pico-examples.git
 > 
@@ -51,6 +51,7 @@ In addition to original connection
 ```
 > cd rasp_pi_pico_sine_wave_i2s_32bit
 > mkdir build
+> cd build
 > cmake -G "NMake Makefiles" ..
 > nmake
 ```
