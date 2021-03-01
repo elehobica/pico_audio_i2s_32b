@@ -12,7 +12,12 @@
 ; Since I2S is MSB-first, shift direction should be to left.
 ; Hence the format of the FIFO word is:
 ;
+; S16 case
 ; | 31   :   16 | 15   :    0 |
+; | sample ws=0 | sample ws=1 |
+;
+; S32 case
+; | 31   :    0 | 31   :    0 |
 ; | sample ws=0 | sample ws=1 |
 ;
 ; Data is output at 1 bit per clock. Use clock divider to adjust frequency.
@@ -22,7 +27,8 @@
 ; One output pin is used for the data output.
 ; Two side-set pins are used. Bit 0 is clock, bit 1 is word select.
 
-; Send 16 bit words to the PIO for mono, 32 bit words for stereo
+; Send 16 bit words to the PIO for mono, 32 bit words for stereo (S16)
+; Send 32 bit words to the PIO for mono, 32 bit words * 2 for stereo (S32)
 
 .program audio_i2s
 .side_set 2
@@ -33,18 +39,18 @@ bitloop1:           ;        ||
     out pins, 1       side 0b10
     jmp x-- bitloop1  side 0b11
     out pins, 1       side 0b00
-    set x, 30         side 0b01
+    mov x, isr        side 0b01
 
 bitloop0:
     out pins, 1       side 0b00
     jmp x-- bitloop0  side 0b01
     out pins, 1       side 0b10
 public entry_point:
-    set x, 30         side 0b11
+    mov x, isr        side 0b11
 
 % c-sdk {
 
-static inline void audio_i2s_program_init(PIO pio, uint sm, uint offset, uint data_pin, uint clock_pin_base) {
+static inline void audio_i2s_program_init(PIO pio, uint sm, uint offset, uint data_pin, uint clock_pin_base, uint res_bits) {
     pio_sm_config sm_config = audio_i2s_program_get_default_config(offset);
     
     sm_config_set_out_pins(&sm_config, data_pin, 1);
@@ -56,6 +62,13 @@ static inline void audio_i2s_program_init(PIO pio, uint sm, uint offset, uint da
     uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
     pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
     pio_sm_set_pins(pio, sm, 0); // clear pins
+
+    // set resolution to ISR (use as config value)
+    pio_sm_set_enabled(pio, sm, false);
+    pio_sm_put_blocking(pio, sm, res_bits - 2); // res_bits should be 32, 16 or 8
+    pio_sm_exec(pio, sm, pio_encode_pull(false, false));
+    pio_sm_exec(pio, sm, pio_encode_out(pio_isr, 32));
+    pio_sm_set_enabled(pio, sm, true);
 
     pio_sm_exec(pio, sm, pio_encode_jmp(offset + audio_i2s_offset_entry_point));
 }
