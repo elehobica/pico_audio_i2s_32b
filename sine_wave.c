@@ -64,6 +64,16 @@ audio_buffer_pool_t *init_audio() {
 
     ok = audio_i2s_connect(producer_pool);
     assert(ok);
+    { // initial buffer data
+        audio_buffer_t *buffer = take_audio_buffer(producer_pool, true);
+        int32_t *samples = (int32_t *) buffer->buffer->bytes;
+        for (uint i = 0; i < buffer->max_sample_count; i++) {
+            samples[i*2+0] = 0;
+            samples[i*2+1] = 0;
+        }
+        buffer->sample_count = buffer->max_sample_count;
+        give_audio_buffer(producer_pool, buffer);
+    }
     audio_i2s_set_enabled(true);
 #elif USE_AUDIO_PWM
     output_format = audio_pwm_setup(&audio_format, -1, &default_mono_channel_config);
@@ -84,6 +94,11 @@ audio_buffer_pool_t *init_audio() {
     audio_spdif_set_enabled(true);
 #endif
     return producer_pool;
+}
+
+static inline uint32_t _millis(void)
+{
+	return to_ms_since_boot(get_absolute_time());
 }
 
 int main() {
@@ -157,7 +172,9 @@ int main() {
             printf("vol = %d, step0 = %d, step1 = %d      \r", vol, step0 >> 16, step1 >> 16);
 #endif
         }
+        //printf("1 millis = %d\n", _millis());
         audio_buffer_t *buffer = take_audio_buffer(ap, true);
+        //printf("2 millis = %d\n", _millis());
         int32_t *samples = (int32_t *) buffer->buffer->bytes;
         for (uint i = 0; i < buffer->max_sample_count; i++) {
             int32_t value0 = (vol * sine_wave_table[pos0 >> 16u]) << 8u;
@@ -171,7 +188,9 @@ int main() {
             if (pos1 >= pos_max) pos1 -= pos_max;
         }
         buffer->sample_count = buffer->max_sample_count;
+        //printf("3 millis = %d\n", _millis());
         give_audio_buffer(ap, buffer);
+        //printf("4 millis = %d\n", _millis());
     }
     puts("\n");
     return 0;
