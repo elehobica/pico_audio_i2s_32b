@@ -12,5 +12,5 @@ if (NOT TARGET my_pico_audio)
             $<$<NOT:$<BOOL:${PICO_NO_HARDWARE}>>:${CMAKE_CURRENT_LIST_DIR}/audio_utils.S>
     )
 
-    target_link_libraries(my_pico_audio INTERFACE my_pico_audio_headers pico_sync)
+    target_link_libraries(my_pico_audio INTERFACE my_pico_audio_headers pico_sync pico_util_buffer)
 endif()

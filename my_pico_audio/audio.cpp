@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+// Modified by Elehobica, 2021
+
 #include <cstring>
 #include "pico/audio.h"
 #include "pico/sample_conversion.h"

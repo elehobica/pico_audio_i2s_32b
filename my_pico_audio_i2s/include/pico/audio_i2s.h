@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+// Modified by Elehobica, 2021
+
 #ifndef _PICO_AUDIO_I2S_H
 #define _PICO_AUDIO_I2S_H
 
@@ -91,12 +93,12 @@ extern "C" {
 
 #ifndef PICO_AUDIO_I2S_DATA_PIN
 //#warning PICO_AUDIO_I2S_DATA_PIN should be defined when using AUDIO_I2S
-#define PICO_AUDIO_I2S_DATA_PIN 28
+#define PICO_AUDIO_I2S_DATA_PIN 18
 #endif
 
 #ifndef PICO_AUDIO_I2S_CLOCK_PIN_BASE
 //#warning PICO_AUDIO_I2S_CLOCK_PIN_BASE should be defined when using AUDIO_I2S
-#define PICO_AUDIO_I2S_CLOCK_PIN_BASE 26
+#define PICO_AUDIO_I2S_CLOCK_PIN_BASE 16
 #endif
 
 // todo this needs to come from a build config

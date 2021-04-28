@@ -17,9 +17,11 @@ In addition to original connection
 
 | Pico Pin # | GPIO | Function | Connection |
 ----|----|----|----
-| 31 | GP26 | BCK | to PCM5102 BCK (13) / to ES9024 BCK (1) |
-| 32 | GP27 | LRCK | to PCM5102 LRCK (15) / to ES9023 LRCK (2) |
-| 34 | GP28 | SDO | to PCM5102 DIN (14) / to ES9023 SDI (3) |
+| 21 | GP16 | BCK | to PCM5102 BCK (13) / to ES9024 BCK (1) |
+| 22 | GP17 | LRCK | to PCM5102 LRCK (15) / to ES9023 LRCK (2) |
+| 24 | GP18 | SDO | to PCM5102 DIN (14) / to ES9023 SDI (3) |
+
+![PCM5102_schematic](doc/RPi_Pico_WAV_Player_PCM5102_Schematic.png)
 
 ### PCM5102 Board Setting
 * tie PCM5102 SCK (12) to low (bridge short land)
@@ -56,3 +58,6 @@ In addition to original connection
 > nmake
 ```
 * Put "sine_wave.uf2" on RPI-RP2 drive
+
+## Application Example
+* [RPi_Pico_WAV_Player](https://github.com/elehobica/RPi_Pico_WAV_Player)

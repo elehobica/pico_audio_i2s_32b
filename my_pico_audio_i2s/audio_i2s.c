@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+// Modified by Elehobica, 2021
+
 #include <stdio.h>
 
+#include "pico/stdlib.h"
 #include "pico/audio_i2s.h"
 #include "audio_i2s.pio.h"
 #include "hardware/pio.h"
@@ -454,6 +457,17 @@ static inline void audio_start_dma_transfer() {
     }
 }
 
+// i2s callback function to be defined at external
+__attribute__((weak))
+void i2s_callback_func()
+{
+    /*
+	uint32_t time = to_ms_since_boot(get_absolute_time());
+    printf("i2s_callback_func %d\n", time);
+    */
+    return;
+}
+
 // irq handler for DMA
 void __isr __time_critical_func(audio_i2s_dma_irq_handler)() {
 #if PICO_AUDIO_I2S_NOOP
@@ -472,6 +486,7 @@ void __isr __time_critical_func(audio_i2s_dma_irq_handler)() {
         }
         audio_start_dma_transfer();
         DEBUG_PINS_CLR(audio_timing, 4);
+        i2s_callback_func();
     }
 #endif
 }

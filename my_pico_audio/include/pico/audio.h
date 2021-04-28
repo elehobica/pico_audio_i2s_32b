@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+// Modified by Elehobica, 2021
+
 #ifndef _PICO_AUDIO_H
 #define _PICO_AUDIO_H
 
