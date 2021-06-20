@@ -28,9 +28,18 @@
 #endif
 
 #define SINE_WAVE_TABLE_LEN 2048
-#define SAMPLES_PER_BUFFER 1024 // Samples / channel
+#define SAMPLES_PER_BUFFER 1156 // Samples / channel
+
+static const uint32_t PIN_DCDC_PSM_CTRL = 23;
 
 static int16_t sine_wave_table[SINE_WAVE_TABLE_LEN];
+audio_buffer_pool_t *ap;
+uint32_t step0 = 0x200000;
+uint32_t step1 = 0x200000;
+uint32_t pos0 = 0;
+uint32_t pos1 = 0;
+const uint32_t pos_max = 0x10000 * SINE_WAVE_TABLE_LEN;
+uint vol = 20;
 
 audio_buffer_pool_t *init_audio() {
 
@@ -132,17 +141,19 @@ int main() {
     // Reinit uart now that clk_peri has changed
     stdio_init_all();
 
+    // DCDC PSM control
+    // 0: PFM mode (best efficiency)
+    // 1: PWM mode (improved ripple)
+    gpio_init(PIN_DCDC_PSM_CTRL);
+    gpio_set_dir(PIN_DCDC_PSM_CTRL, GPIO_OUT);
+    gpio_put(PIN_DCDC_PSM_CTRL, 1); // PWM mode for less Audio noise
+
     for (int i = 0; i < SINE_WAVE_TABLE_LEN; i++) {
         sine_wave_table[i] = 32767 * cosf(i * 2 * (float) (M_PI / SINE_WAVE_TABLE_LEN));
     }
 
-    audio_buffer_pool_t *ap = init_audio();
-    uint32_t step0 = 0x200000;
-    uint32_t step1 = 0x200000;
-    uint32_t pos0 = 0;
-    uint32_t pos1 = 0;
-    uint32_t pos_max = 0x10000 * SINE_WAVE_TABLE_LEN;
-    uint vol = 128;
+    ap = init_audio();
+
     while (true) {
 #if USE_AUDIO_PWM
         enum audio_correction_mode m = audio_pwm_get_correction_mode();
@@ -172,26 +183,28 @@ int main() {
             printf("vol = %d, step0 = %d, step1 = %d      \r", vol, step0 >> 16, step1 >> 16);
 #endif
         }
-        //printf("1 millis = %d\n", _millis());
-        audio_buffer_t *buffer = take_audio_buffer(ap, true);
-        //printf("2 millis = %d\n", _millis());
-        int32_t *samples = (int32_t *) buffer->buffer->bytes;
-        for (uint i = 0; i < buffer->max_sample_count; i++) {
-            int32_t value0 = (vol * sine_wave_table[pos0 >> 16u]) << 8u;
-            int32_t value1 = (vol * sine_wave_table[pos1 >> 16u]) << 8u;
-            // use 32bit full scale
-            samples[i*2+0] = value0 + (value0 >> 16u);  // L
-            samples[i*2+1] = value1 + (value1 >> 16u);  // R
-            pos0 += step0;
-            pos1 += step1;
-            if (pos0 >= pos_max) pos0 -= pos_max;
-            if (pos1 >= pos_max) pos1 -= pos_max;
-        }
-        buffer->sample_count = buffer->max_sample_count;
-        //printf("3 millis = %d\n", _millis());
-        give_audio_buffer(ap, buffer);
-        //printf("4 millis = %d\n", _millis());
     }
     puts("\n");
     return 0;
+}
+
+void i2s_callback_func()
+{
+    audio_buffer_t *buffer = take_audio_buffer(ap, false);
+    if (buffer == NULL) { return; }
+    int32_t *samples = (int32_t *) buffer->buffer->bytes;
+    for (uint i = 0; i < buffer->max_sample_count; i++) {
+        int32_t value0 = (vol * sine_wave_table[pos0 >> 16u]) << 8u;
+        int32_t value1 = (vol * sine_wave_table[pos1 >> 16u]) << 8u;
+        // use 32bit full scale
+        samples[i*2+0] = value0 + (value0 >> 16u);  // L
+        samples[i*2+1] = value1 + (value1 >> 16u);  // R
+        pos0 += step0;
+        pos1 += step1;
+        if (pos0 >= pos_max) pos0 -= pos_max;
+        if (pos1 >= pos_max) pos1 -= pos_max;
+    }
+    buffer->sample_count = buffer->max_sample_count;
+    give_audio_buffer(ap, buffer);
+    return;
 }

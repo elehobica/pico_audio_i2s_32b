@@ -59,5 +59,10 @@ In addition to original connection
 ```
 * Put "sine_wave.uf2" on RPI-RP2 drive
 
+## Macro Definitions in audio_i2s.c
+### CORE1_PROCESS_I2S_CALLBACK
+ If defined, i2s_callback_func is processed at Core 1 while main routine and DMA IRQ handler is processed at Core 0.
+ It will be efficient when generating audio data needs computing power. It does not contribute to reduce bus load and even make slightly worse when Core 1 is activated.
+
 ## Application Example
 * [RPi_Pico_WAV_Player](https://github.com/elehobica/RPi_Pico_WAV_Player)
