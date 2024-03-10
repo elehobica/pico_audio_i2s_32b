@@ -1,12 +1,16 @@
-# Raspberry Pi Pico 32bit I2S DAC Library
+# Raspberry Pi Pico sine_wave with 32bit I2S DAC
 
 ## Overview
-This library is for Raspberry Pi Pico to support 32bit/Stereo I2S DAC.  
+This project is an example for Raspberry Pi Pico to support 32bit/Stereo I2S DAC.  
+The sample project included in [pico-playground/audio/sine_wave](https://github.com/raspberrypi/pico-playground/tree/master/audio/sine_wave) supports only 16bit I2S DAC in mono to stereo copy mode.  
+This project supports:
+* 32bit Stereo I2S (PCM5102)
+* jitter-less bit clock frequency for 44.1KHz sampling rate (44118Hz)
 
 ## Supported Board and Peripheral Devices
 * Raspberry Pi Pico
 * PCM5102 32bit I2S Audio DAC
-* ES9023 24bit I2S Audio DAC
+* ES9023 24bit I2S Audio DAC (not tested yet)
 
 ## Pin Assignment
 In addition to original connection
@@ -19,7 +23,7 @@ In addition to original connection
 | 24 | GP18 | SDO | to PCM5102 DIN (14) / to ES9023 SDI (3) |
 | 40 | VBUS | VCC | to VIN of DAC board (5V) |
 
-![PCM5102_schematic](doc/PCM5102_Schematic.png)
+![PCM5102_schematic](../../doc/PCM5102_Schematic.png)
 
 ### PCM5102 Board Setting
 * tie PCM5102 SCK (12) to low (bridge short land)
