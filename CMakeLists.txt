@@ -6,7 +6,7 @@ if (NOT TARGET pico_audio_i2s_32b)
     )
 
     target_sources(pico_audio_i2s_32b INTERFACE
-            ${CMAKE_CURRENT_LIST_DIR}/src/audio_i2s.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/audio_i2s.c
     )
 
     target_link_libraries(pico_audio_i2s_32b INTERFACE

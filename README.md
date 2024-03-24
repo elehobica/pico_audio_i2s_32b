@@ -2,6 +2,8 @@
 
 ## Overview
 This library is for Raspberry Pi Pico to support 32bit/Stereo I2S DAC.  
+* Bit resolution: 32bit
+* Sampling Frequency: up to 192 KHz
 
 ## Supported Board and Peripheral Devices
 * Raspberry Pi Pico
