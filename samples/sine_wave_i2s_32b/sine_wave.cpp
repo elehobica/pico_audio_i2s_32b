@@ -58,14 +58,14 @@ uint vol = 20;
 audio_buffer_pool_t *init_audio() {
 
     static audio_format_t audio_format = {
-            .pcm_format = AUDIO_PCM_FORMAT_S32,
-            .sample_freq = 44100,
-            .channel_count = 2
+        .pcm_format = AUDIO_PCM_FORMAT_S32,
+        .sample_freq = 44100,
+        .channel_count = 2
     };
 
     static audio_buffer_format_t producer_format = {
-            .format = &audio_format,
-            .sample_stride = 8
+        .format = &audio_format,
+        .sample_stride = 8
     };
 
     audio_buffer_pool_t *producer_pool = audio_new_producer_pool(&producer_format, 3,
@@ -74,10 +74,10 @@ audio_buffer_pool_t *init_audio() {
     const audio_format_t *output_format;
 #if USE_AUDIO_I2S
     audio_i2s_config_t config = {
-            .data_pin = PICO_AUDIO_I2S_DATA_PIN,
-            .clock_pin_base = PICO_AUDIO_I2S_CLOCK_PIN_BASE,
-            .dma_channel = 0,
-            .pio_sm = 0
+        .data_pin = PICO_AUDIO_I2S_DATA_PIN,
+        .clock_pin_base = PICO_AUDIO_I2S_CLOCK_PIN_BASE,
+        .dma_channel = 0,
+        .pio_sm = 0
     };
 
     output_format = audio_i2s_setup(&audio_format, &audio_format, &config);

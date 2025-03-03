@@ -1,69 +1,21 @@
 # Raspberry Pi Pico sine_wave with 32bit I2S DAC
 
-## Overview
-This project is an example for Raspberry Pi Pico to support 32bit/Stereo I2S DAC.  
-The sample project included in [pico-playground/audio/sine_wave](https://github.com/raspberrypi/pico-playground/tree/master/audio/sine_wave) supports only 16bit I2S DAC in mono to stereo copy mode.  
-This project supports:
-* 32bit Stereo I2S (PCM5102)
-* jitter-less bit clock frequency for 44.1KHz sampling rate (44118Hz)
-
-## Supported Board and Peripheral Devices
-* Raspberry Pi Pico
-* PCM5102 32bit I2S Audio DAC
-* ES9023 24bit I2S Audio DAC (not tested yet)
+## Pin Assignment
 
 ## Pin Assignment
 In addition to original connection
 
-| Pico Pin # | GPIO | Function | Connection |
+### Serial (CP2102 module)
+| Pico Pin # | Pin Name | Function | CP2102 module |
 ----|----|----|----
-| 21 | GP16 | BCK | to PCM5102 BCK (13) / to ES9024 BCK (1) |
-| 22 | GP17 | LRCK | to PCM5102 LRCK (15) / to ES9023 LRCK (2) |
-| 23 | GND | GND | GND |
-| 24 | GP18 | SDO | to PCM5102 DIN (14) / to ES9023 SDI (3) |
-| 40 | VBUS | VCC | to VIN of DAC board (5V) |
+|  1 | GP0 | UART0_TX | RXD |
+|  2 | GP1 | UART0_RX | TXD |
+|  3 | GND | GND | GND |
 
-![PCM5102_schematic](../../doc/PCM5102_Schematic.png)
-
-### PCM5102 Board Setting
-* tie PCM5102 SCK (12) to low (bridge short land)
-* H1L (FLT) = L
-* H2L (DEMP) = L
-* H3L (XSMT) = H
-* H4L (FMT) = L
-
-## How to build
-* See ["Getting started with Raspberry Pi Pico"](https://datasheets.raspberrypi.org/pico/getting-started-with-pico.pdf)
-* Put "pico-sdk", "pico-examples" and "pico-extras" on the same level with this project folder.
-* Set environmental variables for PICO_SDK_PATH, PICO_EXTRAS_PATH
-* Build is confirmed in Developer Command Prompt for VS 2022 and Visual Studio Code on Windows enviroment
-* Confirmed with Pico SDK 1.5.1, cmake-3.27.2-windows-x86_64 and gcc-arm-none-eabi-10.3-2021.10-win32
-```
-> git clone -b 1.5.1 https://github.com/raspberrypi/pico-sdk.git
-> cd pico-sdk
-> git submodule update -i
-> cd ..
-> git clone -b sdk-1.5.1 https://github.com/raspberrypi/pico-examples.git
->
-> git clone -b sdk-1.5.1 https://github.com/raspberrypi/pico-extras.git
-> 
-> git clone -b main https://github.com/elehobica/pico_audio_i2s_32b.git
-```
-* Lanuch "Developer Command Prompt for VS 2022"
-```
-> cd pico_audio_i2s_32b
-> cd samples/xxxxx  # sample project directory
-> mkdir build
-> cd build
-> cmake -G "NMake Makefiles" ..
-> nmake
-```
-* Put "xxxxx.uf2" on RPI-RP2 drive
-
-## Macro Definitions in audio_i2s.c
-### CORE1_PROCESS_I2S_CALLBACK
- If defined, i2s_callback_func is processed at Core 1 while main routine and DMA IRQ handler is processed at Core 0.
- It will be efficient when generating audio data needs computing power. It does not contribute to reduce bus load and even make slightly worse when Core 1 is activated.
-
-## Application Example
-* [RPi_Pico_WAV_Player](https://github.com/elehobica/RPi_Pico_WAV_Player)
+### Serial interface usage
+* type '+' or '=' to increase volume
+* type '-' to decrease volume
+* type '[' to decrease left channel's frequency
+* type ']' to increase left channel's frequency
+* type '{' to decrease right channel's frequency
+* type '}' to increase right channel's frequency
