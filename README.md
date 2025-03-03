@@ -1,13 +1,14 @@
-# Raspberry Pi Pico 32bit I2S DAC Library
+# 32bit I2S DAC Library for Raspberry Pi Pico / Pico 2
 
 ## Overview
-This library is for Raspberry Pi Pico to support 32bit/Stereo I2S DAC.  
+This library is for Raspberry Pi Pico / Pico 2 to support 32bit/Stereo I2S DAC.
 * Channels: 2ch (Stereo)
 * Bit resolution: 32bit
 * Sampling Frequency: up to 192 KHz
 
 ## Supported Board and Peripheral Devices
 * Raspberry Pi Pico
+* Raspberry Pi Pico 2
 * PCM5102 32bit I2S Audio DAC
 * ES9023 24bit I2S Audio DAC
 
@@ -55,10 +56,11 @@ In addition to original connection
 > cd pico_audio_i2s_32b
 > cd samples/xxxxx  # sample project directory
 > mkdir build && cd build
-> cmake -G "NMake Makefiles" ..
+> cmake -G "NMake Makefiles" ..  ; (for Raspberry Pi Pico 1 series)
+> cmake -G "NMake Makefiles" -DPICO_PLATFORM=rp2350 -DPICO_BOARD=pico2 ..  ; (for Raspberry Pi Pico 2)
 > nmake
 ```
-* Put "xxxxx.uf2" on RPI-RP2 drive
+* Put "*.uf2" on RPI-RP2 or RP2350 drive
 ### Linux
 * Build is confirmed with [pico-sdk-dev-docker:sdk-2.1.1-1.0.0]( https://hub.docker.com/r/elehobica/pico-sdk-dev-docker)
 * Confirmed with cmake-3.22.1 and arm-none-eabi-gcc (15:10.3-2021.07-4) 10.3.1
@@ -66,10 +68,11 @@ In addition to original connection
 $ cd pico_audio_i2s_32b
 $ cd samples/xxxxx  # sample project directory
 $ mkdir build && cd build
-$ cmake ..
+$ cmake ..  # (for Raspberry Pi Pico 1 series)
+$ cmake -DPICO_PLATFORM=rp2350 -DPICO_BOARD=pico2 ..  # (for Raspberry Pi Pico 2)
 $ make -j4
 ```
-* Download "xxxxx.uf2" on RPI-RP2 drive
+* Download "*.uf2" on RPI-RP2 or RP2350 drive
 
 ## Macro Definitions in audio_i2s.c
 ### CORE1_PROCESS_I2S_CALLBACK
