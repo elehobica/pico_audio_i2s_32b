@@ -9,36 +9,39 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  build-sine-wave-i2s_32b:
+  build-binaries:
+    strategy:
+      matrix:
+        project: [sine_wave_i2s_32b]
+        build: [build, build2]
+        include:
+          - build: build
+            platform: rp2040
+            board: pico
+          - build: build2
+            platform: rp2350
+            board: pico2
     runs-on: ubuntu-latest
     env:
-      PROJECT_DIR: samples/sine_wave_i2s_32b
       RELEASE_DIR: Release
-    outputs:
-      release-tag-condition-matched: ${{ steps.release-tag-condition.outputs.matched }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Build Pico
+        with:
+          submodules: true
+      - name: Build
         uses: ./.github/actions/build-and-rename
         with:
-          path: ${{ env.PROJECT_DIR }}
-          build: build
-          identifier: pico
-          output_path: ${{ env.RELEASE_DIR }}
-      - name: Build Pico 2
-        uses: ./.github/actions/build-and-rename
-        with:
-          path: ${{ env.PROJECT_DIR }}
-          build: build2
-          platform: rp2350
-          board: pico2
-          identifier: pico2
+          path: samples/${{ matrix.project }}
+          build: ${{ matrix.build }}
+          platform: ${{ matrix.platform }}
+          board: ${{ matrix.board }}
+          identifier: ${{ matrix.board}}
           output_path: ${{ env.RELEASE_DIR }}
       - name: Upload production artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist-binaries0
+          name: dist-binaries-${{ matrix.project }}-${{ matrix.board }}
           path: |
             ${{ env.RELEASE_DIR }}/*.uf2
             ${{ env.RELEASE_DIR }}/*.elf
@@ -60,9 +63,9 @@ jobs:
           fi
 
   call-upload-release-asset:
-    needs: [build-sine-wave-i2s_32b, release-tag-condition]
+    needs: [build-binaries, release-tag-condition]
     if: ${{ needs.release-tag-condition.outputs.matched == 'true' }}
     uses: ./.github/workflows/upload-release-asset.yml
     with:
       source_run_id: ${{ github.run_id }}
-      artifacts_dirs: "dist-binaries0"
+      artifacts_dirs: "dist-binaries-*"
