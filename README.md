@@ -1,5 +1,7 @@
 # 32bit I2S DAC Library for Raspberry Pi Pico / Pico 2
 
+[![Build](https://github.com/elehobica/pico_audio_i2s_32b/actions/workflows/build-binaries.yml/badge.svg)](https://github.com/elehobica/pico_audio_i2s_32b/actions/workflows/build-binaries.yml)
+
 ## Overview
 This library is for Raspberry Pi Pico / Pico 2 to support 32bit/Stereo I2S DAC.
 * Channels: 2ch (Stereo)
