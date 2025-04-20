@@ -21,6 +21,8 @@
 #include "audio_i2s.pio.h"
 #include "pico/audio_i2s.h"
 
+#define PIO_CLK_DIV_FRAC
+
 //#define CORE1_PROCESS_I2S_CALLBACK  // Multi-Core Processing Mode (Experimentally Single-Core seems better)
 //#define WATCH_DMA_TRANSFER_INTERVAL // Activate only for analysis because of watch overhead
 //#define WATCH_PIO_SM_TX_FIFO_LEVEL  // Activate only for analysis because of watch overhead
@@ -285,7 +287,8 @@ static void update_pio_frequency(uint32_t sample_freq, audio_pcm_format_t pcm_fo
             break;
     }
     assert(divider < 0x1000000);
-#if 1 // PIO_CLK_DIV_FRAC
+    assert(bits <= 32);
+#ifdef PIO_CLK_DIV_FRAC
     float pio_freq = (float) system_clock_frequency * 256 / divider; // frac
     printf("System clock at %u Hz, I2S clock divider %d/256: PIO freq %7.4f Hz\n", (uint) system_clock_frequency, (uint) divider, pio_freq);
     pio_sm_set_clkdiv_int_frac(audio_pio, shared_state.pio_sm, divider >> 8u, divider & 0xffu); // This scheme includes clock Jitter

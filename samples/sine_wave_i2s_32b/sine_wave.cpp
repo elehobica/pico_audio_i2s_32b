@@ -237,7 +237,7 @@ int main() {
             if (c == '{' && step1 > 0x10000) step1 -= 0x10000;
             if (c == '}' && step1 < (SINE_WAVE_TABLE_LEN / 16) * 0x20000) step1 += 0x10000;
             if (c == 'q') break;
-            printf("vol = %d, step0 = %d, step1 = %d      \r", vol, step0 >> 16, step1 >> 16);
+            printf("vol = %d, step0 = %d, step1 = %d      \r", static_cast<int>(vol), static_cast<int>(step0 >> 16), static_cast<int>(step1 >> 16));
         }
     }
     puts("\n");

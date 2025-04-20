@@ -139,6 +139,8 @@ static audio_connection_t connection_default = {
         .producer_pool_give = producer_pool_give_buffer_default,
         .consumer_pool_take = consumer_pool_take_buffer_default,
         .consumer_pool_give = consumer_pool_give_buffer_default,
+        .producer_pool = nullptr,
+        .consumer_pool = nullptr
 };
 
 audio_buffer_t *audio_new_buffer(audio_buffer_format_t *format, int buffer_sample_count) {
