@@ -119,8 +119,8 @@ typedef struct audio_i2s_config {
  * \param i2s_audio_format \todo
  * \param config The configuration to apply.
  */
-const audio_format_t *audio_i2s_setup(const audio_format_t *i2s_input_audio_format, const audio_format_t *i2s_output_audio_format,
-                                               const audio_i2s_config_t *config);
+const audio_format_t* audio_i2s_setup(const audio_format_t* i2s_input_audio_format, const audio_format_t* i2s_output_audio_format,
+                                               const audio_i2s_config_t* config);
 
 
 /** \brief End up system to output I2S audio
@@ -130,7 +130,7 @@ const audio_format_t *audio_i2s_setup(const audio_format_t *i2s_input_audio_form
 void audio_i2s_end();
 /*
  * \param config The configuration to apply.
-void audio_i2s_end(const audio_i2s_config_t *config);
+void audio_i2s_end(const audio_i2s_config_t* config);
 */
 
 
@@ -140,7 +140,7 @@ void audio_i2s_end(const audio_i2s_config_t *config);
  * \param producer
  * \param connection
  */
-bool audio_i2s_connect_thru(audio_buffer_pool_t *producer, audio_connection_t *connection);
+bool audio_i2s_connect_thru(audio_buffer_pool_t* producer, audio_connection_t* connection);
 
 
 /** \brief \todo
@@ -150,7 +150,7 @@ bool audio_i2s_connect_thru(audio_buffer_pool_t *producer, audio_connection_t *c
  *
  *  todo make a common version (or a macro) .. we don't want to pull in unnecessary code by default
  */
-bool audio_i2s_connect(audio_buffer_pool_t *producer);
+bool audio_i2s_connect(audio_buffer_pool_t* producer);
 
 
 /** \brief \todo
@@ -158,8 +158,8 @@ bool audio_i2s_connect(audio_buffer_pool_t *producer);
  *
  * \param producer
  */
-bool audio_i2s_connect_s8(audio_buffer_pool_t *producer);
-bool audio_i2s_connect_extra(audio_buffer_pool_t *producer, bool buffer_on_give, uint buffer_count, uint samples_per_buffer, audio_connection_t *connection);
+bool audio_i2s_connect_s8(audio_buffer_pool_t* producer);
+bool audio_i2s_connect_extra(audio_buffer_pool_t* producer, bool buffer_on_give, uint buffer_count, uint samples_per_buffer, audio_connection_t* connection);
 
 /** \brief \todo
  * \ingroup pico_audio_i2s
@@ -171,8 +171,8 @@ bool audio_i2s_connect_extra(audio_buffer_pool_t *producer, bool buffer_on_give,
  * \param connection
  * \return
  */
-bool audio_i2s_connect_extra(audio_buffer_pool_t *producer, bool buffer_on_give, uint buffer_count,
-                                 uint samples_per_buffer, audio_connection_t *connection);
+bool audio_i2s_connect_extra(audio_buffer_pool_t* producer, bool buffer_on_give, uint buffer_count,
+                                 uint samples_per_buffer, audio_connection_t* connection);
 
 
 /** \brief Set up system to output I2S audio

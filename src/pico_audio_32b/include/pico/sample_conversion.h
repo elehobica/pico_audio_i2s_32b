@@ -6,8 +6,7 @@
 
 // Modified by Elehobica, 2021
 
-#ifndef SOFTWARE_SAMPLE_CONVERSION_H
-#define SOFTWARE_SAMPLE_CONVERSION_H
+#pragma once
 
 #include <algorithm>
 #include <cstring>
@@ -291,5 +290,3 @@ void producer_pool_blocking_give(audio_connection_t *connection, audio_buffer_t 
     assert(pos == buffer->sample_count);
     queue_free_audio_buffer(pbc->core.producer_pool, buffer);
 }
-
-#endif //SOFTWARE_SAMPLE_CONVERSION_H

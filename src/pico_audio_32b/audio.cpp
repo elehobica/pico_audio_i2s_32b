@@ -21,8 +21,9 @@
 #define audio_assert(x) (void)0
 #endif
 
-inline static audio_buffer_t *list_remove_head(audio_buffer_t **phead) {
-    audio_buffer_t *ab = *phead;
+inline static audio_buffer_t* list_remove_head(audio_buffer_t** phead)
+{
+    audio_buffer_t* ab = *phead;
 
     if (ab) {
         *phead = ab->next;
@@ -32,9 +33,9 @@ inline static audio_buffer_t *list_remove_head(audio_buffer_t **phead) {
     return ab;
 }
 
-inline static audio_buffer_t *list_remove_head_with_tail(audio_buffer_t **phead,
-                                                              audio_buffer_t **ptail) {
-    audio_buffer_t *ab = *phead;
+inline static audio_buffer_t* list_remove_head_with_tail(audio_buffer_t** phead, audio_buffer_t** ptail)
+{
+    audio_buffer_t* ab = *phead;
 
     if (ab) {
         *phead = ab->next;
@@ -50,7 +51,8 @@ inline static audio_buffer_t *list_remove_head_with_tail(audio_buffer_t **phead,
     return ab;
 }
 
-inline static void list_prepend(audio_buffer_t **phead, audio_buffer_t *ab) {
+inline static void list_prepend(audio_buffer_t** phead, audio_buffer_t* ab)
+{
     audio_assert(ab->next == NULL);
     audio_assert(ab != *phead);
     ab->next = *phead;
@@ -58,8 +60,8 @@ inline static void list_prepend(audio_buffer_t **phead, audio_buffer_t *ab) {
 }
 
 // todo add a tail for these already sorted lists as we generally insert on the end
-inline static void list_append_with_tail(audio_buffer_t **phead, audio_buffer_t **ptail,
-                                         audio_buffer_t *ab) {
+inline static void list_append_with_tail(audio_buffer_t** phead, audio_buffer_t** ptail, audio_buffer_t* ab)
+{
     audio_assert(ab->next == NULL);
     audio_assert(ab != *phead);
     audio_assert(ab != *ptail);
@@ -76,8 +78,9 @@ inline static void list_append_with_tail(audio_buffer_t **phead, audio_buffer_t 
     }
 }
 
-audio_buffer_t *get_free_audio_buffer(audio_buffer_pool_t *context, bool block) {
-    audio_buffer_t *ab;
+audio_buffer_t* get_free_audio_buffer(audio_buffer_pool_t* context, bool block)
+{
+    audio_buffer_t* ab;
 
     do {
         uint32_t save = spin_lock_blocking(context->free_list_spin_lock);
@@ -89,7 +92,8 @@ audio_buffer_t *get_free_audio_buffer(audio_buffer_pool_t *context, bool block) 
     return ab;
 }
 
-void queue_free_audio_buffer(audio_buffer_pool_t *context, audio_buffer_t *ab) {
+void queue_free_audio_buffer(audio_buffer_pool_t* context, audio_buffer_t* ab)
+{
     assert(!ab->next);
     uint32_t save = spin_lock_blocking(context->free_list_spin_lock);
     list_prepend(&context->free_list, ab);
@@ -97,8 +101,9 @@ void queue_free_audio_buffer(audio_buffer_pool_t *context, audio_buffer_t *ab) {
     __sev();
 }
 
-audio_buffer_t *get_full_audio_buffer(audio_buffer_pool_t *context, bool block) {
-    audio_buffer_t *ab;
+audio_buffer_t* get_full_audio_buffer(audio_buffer_pool_t* context, bool block)
+{
+    audio_buffer_t* ab;
 
     do {
         uint32_t save = spin_lock_blocking(context->prepared_list_spin_lock);
@@ -110,7 +115,8 @@ audio_buffer_t *get_full_audio_buffer(audio_buffer_pool_t *context, bool block) 
     return ab;
 }
 
-void queue_full_audio_buffer(audio_buffer_pool_t *context, audio_buffer_t *ab) {
+void queue_full_audio_buffer(audio_buffer_pool_t* context, audio_buffer_t* ab)
+{
     assert(!ab->next);
     uint32_t save = spin_lock_blocking(context->prepared_list_spin_lock);
     list_append_with_tail(&context->prepared_list, &context->prepared_list_tail, ab);
@@ -118,19 +124,23 @@ void queue_full_audio_buffer(audio_buffer_pool_t *context, audio_buffer_t *ab) {
     __sev();
 }
 
-void producer_pool_give_buffer_default(audio_connection_t *connection, audio_buffer_t *buffer) {
+void producer_pool_give_buffer_default(audio_connection_t* connection, audio_buffer_t* buffer)
+{
     queue_full_audio_buffer(connection->producer_pool, buffer);
 }
 
-audio_buffer_t *producer_pool_take_buffer_default(audio_connection_t *connection, bool block) {
+audio_buffer_t* producer_pool_take_buffer_default(audio_connection_t* connection, bool block)
+{
     return get_free_audio_buffer(connection->producer_pool, block);
 }
 
-void consumer_pool_give_buffer_default(audio_connection_t *connection, audio_buffer_t *buffer) {
+void consumer_pool_give_buffer_default(audio_connection_t* connection, audio_buffer_t* buffer)
+{
     queue_free_audio_buffer(connection->consumer_pool, buffer);
 }
 
-audio_buffer_t *consumer_pool_take_buffer_default(audio_connection_t *connection, bool block) {
+audio_buffer_t* consumer_pool_take_buffer_default(audio_connection_t* connection, bool block)
+{
     return get_full_audio_buffer(connection->consumer_pool, block);
 }
 
@@ -143,24 +153,25 @@ static audio_connection_t connection_default = {
         .consumer_pool = nullptr
 };
 
-audio_buffer_t *audio_new_buffer(audio_buffer_format_t *format, int buffer_sample_count) {
-    audio_buffer_t *buffer = (audio_buffer_t *) calloc(1, sizeof(audio_buffer_t));
+audio_buffer_t* audio_new_buffer(audio_buffer_format_t* format, int buffer_sample_count)
+{
+    audio_buffer_t* buffer = (audio_buffer_t *) calloc(1, sizeof(audio_buffer_t));
     audio_init_buffer(buffer, format, buffer_sample_count);
     return buffer;
 }
 
-void audio_init_buffer(audio_buffer_t *audio_buffer, audio_buffer_format_t *format, int buffer_sample_count) {
+void audio_init_buffer(audio_buffer_t* audio_buffer, audio_buffer_format_t* format, int buffer_sample_count)
+{
     audio_buffer->format = format;
     audio_buffer->buffer = pico_buffer_alloc(buffer_sample_count * format->sample_stride);
     audio_buffer->max_sample_count = buffer_sample_count;
     audio_buffer->sample_count = 0;
 }
 
-audio_buffer_pool_t *
-audio_new_buffer_pool(audio_buffer_format_t *format, int buffer_count, int buffer_sample_count) {
-    audio_buffer_pool_t *ac = (audio_buffer_pool_t *) calloc(1, sizeof(audio_buffer_pool_t));
-    audio_buffer_t *audio_buffers = buffer_count ? (audio_buffer_t *) calloc(buffer_count,
-                                                                                       sizeof(audio_buffer_t)) : 0;
+audio_buffer_pool_t* audio_new_buffer_pool(audio_buffer_format_t* format, int buffer_count, int buffer_sample_count)
+{
+    audio_buffer_pool_t* ac = (audio_buffer_pool_t*) calloc(1, sizeof(audio_buffer_pool_t));
+    audio_buffer_t* audio_buffers = buffer_count ? (audio_buffer_t*) calloc(buffer_count, sizeof(audio_buffer_t)) : 0;
     ac->format = format->format;
     for (int i = 0; i < buffer_count; i++) {
         audio_init_buffer(audio_buffers + i, format, buffer_sample_count);
@@ -176,8 +187,9 @@ audio_new_buffer_pool(audio_buffer_format_t *format, int buffer_count, int buffe
     return ac;
 }
 
-audio_buffer_t *audio_new_wrapping_buffer(audio_buffer_format_t *format, mem_buffer_t *buffer) {
-    audio_buffer_t *audio_buffer = (audio_buffer_t *) calloc(1, sizeof(audio_buffer_t));
+audio_buffer_t* audio_new_wrapping_buffer(audio_buffer_format_t* format, mem_buffer_t* buffer)
+{
+    audio_buffer_t* audio_buffer = (audio_buffer_t*) calloc(1, sizeof(audio_buffer_t));
     if (audio_buffer) {
         audio_buffer->format = format;
         audio_buffer->buffer = buffer;
@@ -189,22 +201,22 @@ audio_buffer_t *audio_new_wrapping_buffer(audio_buffer_format_t *format, mem_buf
 
 }
 
-audio_buffer_pool_t *
-audio_new_producer_pool(audio_buffer_format_t *format, int buffer_count, int buffer_sample_count) {
-    audio_buffer_pool_t *ac = audio_new_buffer_pool(format, buffer_count, buffer_sample_count);
+audio_buffer_pool_t* audio_new_producer_pool(audio_buffer_format_t* format, int buffer_count, int buffer_sample_count)
+{
+    audio_buffer_pool_t* ac = audio_new_buffer_pool(format, buffer_count, buffer_sample_count);
     ac->type = audio_buffer_pool::ac_producer;
     return ac;
 }
 
-audio_buffer_pool_t *
-audio_new_consumer_pool(audio_buffer_format_t *format, int buffer_count, int buffer_sample_count) {
-    audio_buffer_pool_t *ac = audio_new_buffer_pool(format, buffer_count, buffer_sample_count);
+audio_buffer_pool_t* audio_new_consumer_pool(audio_buffer_format_t* format, int buffer_count, int buffer_sample_count)
+{
+    audio_buffer_pool_t* ac = audio_new_buffer_pool(format, buffer_count, buffer_sample_count);
     ac->type = audio_buffer_pool::ac_consumer;
     return ac;
 }
 
-void audio_complete_connection(audio_connection_t *connection, audio_buffer_pool_t *producer_pool,
-                               audio_buffer_pool_t *consumer_pool) {
+void audio_complete_connection(audio_connection_t* connection, audio_buffer_pool_t* producer_pool, audio_buffer_pool_t* consumer_pool)
+{
     assert(producer_pool->type == audio_buffer_pool::ac_producer);
     assert(consumer_pool->type == audio_buffer_pool::ac_consumer);
     producer_pool->connection = connection;
@@ -213,7 +225,8 @@ void audio_complete_connection(audio_connection_t *connection, audio_buffer_pool
     connection->consumer_pool = consumer_pool;
 }
 
-void give_audio_buffer(audio_buffer_pool_t *ac, audio_buffer_t *buffer) {
+void give_audio_buffer(audio_buffer_pool_t* ac, audio_buffer_t* buffer)
+{
     buffer->user_data = 0;
     assert(ac->connection);
     if (ac->type == audio_buffer_pool::ac_producer)
@@ -222,7 +235,8 @@ void give_audio_buffer(audio_buffer_pool_t *ac, audio_buffer_t *buffer) {
         ac->connection->consumer_pool_give(ac->connection, buffer);
 }
 
-audio_buffer_t *take_audio_buffer(audio_buffer_pool_t *ac, bool block) {
+audio_buffer_t* take_audio_buffer(audio_buffer_pool_t* ac, bool block)
+{
     assert(ac->connection);
     if (ac->type == audio_buffer_pool::ac_producer)
         return ac->connection->producer_pool_take(ac->connection, block);
@@ -231,36 +245,44 @@ audio_buffer_t *take_audio_buffer(audio_buffer_pool_t *ac, bool block) {
 }
 
 // todo rename this - this is s16 to s16
-audio_buffer_t *mono_to_mono_consumer_take(audio_connection_t *connection, bool block) {
+audio_buffer_t* mono_to_mono_consumer_take(audio_connection_t* connection, bool block)
+{
     return consumer_pool_take<Mono<FmtS16>, Mono<FmtS16>>(connection, block);
 }
 
 // todo rename this - this is s16 to s16
-audio_buffer_t *stereo_s16_to_stereo_s16_consumer_take(audio_connection_t *connection, bool block) {
+audio_buffer_t* stereo_s16_to_stereo_s16_consumer_take(audio_connection_t* connection, bool block)
+{
     return consumer_pool_take<Stereo<FmtS16>, Stereo<FmtS16>>(connection, block);
 }
 
-audio_buffer_t *stereo_s32_to_stereo_s32_consumer_take(audio_connection_t *connection, bool block) {
+audio_buffer_t* stereo_s32_to_stereo_s32_consumer_take(audio_connection_t* connection, bool block)
+{
     return consumer_pool_take<Stereo<FmtS32>, Stereo<FmtS32>>(connection, block);
 }
 
 // todo rename this - this is s16 to s16
-audio_buffer_t *mono_to_stereo_consumer_take(audio_connection_t *connection, bool block) {
+audio_buffer_t* mono_to_stereo_consumer_take(audio_connection_t* connection, bool block)
+{
     return consumer_pool_take<Stereo<FmtS16>, Mono<FmtS16>>(connection, block);
 }
 
-audio_buffer_t *mono_s8_to_mono_consumer_take(audio_connection_t *connection, bool block) {
+audio_buffer_t* mono_s8_to_mono_consumer_take(audio_connection_t* connection, bool block)
+{
     return consumer_pool_take<Mono<FmtS16>, Mono<FmtS8>>(connection, block);
 }
 
-audio_buffer_t *mono_s8_to_stereo_consumer_take(audio_connection_t *connection, bool block) {
+audio_buffer_t* mono_s8_to_stereo_consumer_take(audio_connection_t* connection, bool block)
+{
     return consumer_pool_take<Stereo<FmtS16>, Mono<FmtS8>>(connection, block);
 }
 
-void stereo_s16_to_stereo_s16_producer_give(audio_connection_t *connection, audio_buffer_t *buffer) {
+void stereo_s16_to_stereo_s16_producer_give(audio_connection_t* connection, audio_buffer_t* buffer)
+{
     return producer_pool_blocking_give<Stereo<FmtS16>, Stereo<FmtS16>>(connection, buffer);
 }
 
-void stereo_s32_to_stereo_s32_producer_give(audio_connection_t *connection, audio_buffer_t *buffer) {
+void stereo_s32_to_stereo_s32_producer_give(audio_connection_t* connection, audio_buffer_t* buffer)
+{
     return producer_pool_blocking_give<Stereo<FmtS32>, Stereo<FmtS32>>(connection, buffer);
 }

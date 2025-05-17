@@ -6,8 +6,7 @@
 
 // Modified by Elehobica, 2021
 
-#ifndef _PICO_AUDIO_H
-#define _PICO_AUDIO_H
+#pragma once
 
 #include "pico.h"
 #include "pico/util/buffer.h"
@@ -64,20 +63,20 @@ typedef struct audio_format {
 /** \brief Audio buffer format definition
  */
 typedef struct audio_buffer_format {
-    const audio_format_t *format;      ///< Audio format
+    const audio_format_t* format;      ///< Audio format
     uint16_t sample_stride;                 ///< Sample stride
 } audio_buffer_format_t;
 
 /** \brief Audio buffer definition
  */
 typedef struct audio_buffer {
-    mem_buffer_t *buffer;
-    const audio_buffer_format_t *format;
+    mem_buffer_t* buffer;
+    const audio_buffer_format_t* format;
     uint32_t sample_count;
     uint32_t max_sample_count;
     uint32_t user_data; // only valid while the user has the buffer
     // private - todo make an internal version
-    struct audio_buffer *next;
+    struct audio_buffer* next;
 } audio_buffer_t;
 
 typedef struct audio_connection audio_connection_t;
@@ -86,30 +85,30 @@ typedef struct audio_buffer_pool {
     enum {
         ac_producer, ac_consumer
     } type;
-    const audio_format_t *format;
+    const audio_format_t* format;
     // private
-    audio_connection_t *connection;
-    spin_lock_t *free_list_spin_lock;
+    audio_connection_t* connection;
+    spin_lock_t* free_list_spin_lock;
     // ----- begin protected by free_list_spin_lock -----
-    audio_buffer_t *free_list;
-    spin_lock_t *prepared_list_spin_lock;
-    audio_buffer_t *prepared_list;
-    audio_buffer_t *prepared_list_tail;
+    audio_buffer_t* free_list;
+    spin_lock_t* prepared_list_spin_lock;
+    audio_buffer_t* prepared_list;
+    audio_buffer_t* prepared_list_tail;
 } audio_buffer_pool_t;
 
 typedef struct audio_connection audio_connection_t;
 
 struct audio_connection {
-    audio_buffer_t *(*producer_pool_take)(audio_connection_t *connection, bool block);
+    audio_buffer_t *(*producer_pool_take)(audio_connection_t* connection, bool block);
 
-    void (*producer_pool_give)(audio_connection_t *connection, audio_buffer_t *buffer);
+    void (*producer_pool_give)(audio_connection_t* connection, audio_buffer_t* buffer);
 
-    audio_buffer_t *(*consumer_pool_take)(audio_connection_t *connection, bool block);
+    audio_buffer_t *(*consumer_pool_take)(audio_connection_t* connection, bool block);
 
-    void (*consumer_pool_give)(audio_connection_t *connection, audio_buffer_t *buffer);
+    void (*consumer_pool_give)(audio_connection_t* connection, audio_buffer_t* buffer);
 
-    audio_buffer_pool_t *producer_pool;
-    audio_buffer_pool_t *consumer_pool;
+    audio_buffer_pool_t* producer_pool;
+    audio_buffer_pool_t* consumer_pool;
 };
 
 /*! \brief Allocate and initialise an audio producer pool
@@ -120,7 +119,7 @@ struct audio_connection {
  * \param buffer_sample_count \todo
  * \return Pointer to an audio_buffer_pool
  */
-audio_buffer_pool_t *audio_new_producer_pool(audio_buffer_format_t *format, int buffer_count,
+audio_buffer_pool_t* audio_new_producer_pool(audio_buffer_format_t* format, int buffer_count,
                                                          int buffer_sample_count);
 
 /*! \brief Allocate and initialise an audio consumer pool
@@ -131,7 +130,7 @@ audio_buffer_pool_t *audio_new_producer_pool(audio_buffer_format_t *format, int 
  * \param buffer_sample_count
  * \return Pointer to an audio_buffer_pool
  */
-audio_buffer_pool_t *audio_new_consumer_pool(audio_buffer_format_t *format, int buffer_count,
+audio_buffer_pool_t* audio_new_consumer_pool(audio_buffer_format_t* format, int buffer_count,
                                                          int buffer_sample_count);
 
 /*! \brief Allocate and initialise an audio wrapping buffer
@@ -141,7 +140,7 @@ audio_buffer_pool_t *audio_new_consumer_pool(audio_buffer_format_t *format, int 
  * \param buffer \todo
  * \return Pointer to an audio_buffer
  */
-audio_buffer_t *audio_new_wrapping_buffer(audio_buffer_format_t *format, mem_buffer_t *buffer);
+audio_buffer_t* audio_new_wrapping_buffer(audio_buffer_format_t* format, mem_buffer_t* buffer);
 
 /*! \brief Allocate and initialise an new audio buffer
  *  \ingroup pico_audio
@@ -150,7 +149,7 @@ audio_buffer_t *audio_new_wrapping_buffer(audio_buffer_format_t *format, mem_buf
  * \param buffer_sample_count \todo
  * \return Pointer to an audio_buffer
  */
-audio_buffer_t *audio_new_buffer(audio_buffer_format_t *format, int buffer_sample_count);
+audio_buffer_t* audio_new_buffer(audio_buffer_format_t* format, int buffer_sample_count);
 
 /*! \brief Initialise an audio buffer
  *  \ingroup pico_audio
@@ -159,7 +158,7 @@ audio_buffer_t *audio_new_buffer(audio_buffer_format_t *format, int buffer_sampl
  * \param format Format of the audio buffer
  * \param buffer_sample_count \todo
  */
-void audio_init_buffer(audio_buffer_t *audio_buffer, audio_buffer_format_t *format, int buffer_sample_count);
+void audio_init_buffer(audio_buffer_t* audio_buffer, audio_buffer_format_t* format, int buffer_sample_count);
 
 /*! \brief \todo
  *  \ingroup pico_audio
@@ -168,20 +167,20 @@ void audio_init_buffer(audio_buffer_t *audio_buffer, audio_buffer_format_t *form
  * \param buffer \todo
  * \return Pointer to an audio_buffer
  */
-void give_audio_buffer(audio_buffer_pool_t *ac, audio_buffer_t *buffer);
+void give_audio_buffer(audio_buffer_pool_t* ac, audio_buffer_t* buffer);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  *
  * \return Pointer to an audio_buffer
  */
-audio_buffer_t *take_audio_buffer(audio_buffer_pool_t *ac, bool block);
+audio_buffer_t* take_audio_buffer(audio_buffer_pool_t* ac, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  *
  */
-static inline void release_audio_buffer(audio_buffer_pool_t *ac, audio_buffer_t *buffer) {
+static inline void release_audio_buffer(audio_buffer_pool_t* ac, audio_buffer_t* buffer) {
     buffer->sample_count = 0;
     give_audio_buffer(ac, buffer);
 }
@@ -192,7 +191,7 @@ static inline void release_audio_buffer(audio_buffer_pool_t *ac, audio_buffer_t 
  * todo we are currently limited to 4095+1 input samples
  * step is fraction of an input sample per output sample * 0x1000 and should be < 0x1000 i.e. we we are up-sampling (otherwise results are undefined)
  */
-void audio_upsample(int16_t *input, int16_t *output, uint output_count, uint32_t step);
+void audio_upsample(int16_t* input, int16_t* output, uint output_count, uint32_t step);
 
 /*! \brief \todo
  *  \ingroup pico_audio
@@ -200,60 +199,60 @@ void audio_upsample(int16_t *input, int16_t *output, uint output_count, uint32_t
  * todo we are currently limited to 4095+1 input samples
  * step is fraction of an input sample per output sample * 0x1000 and should be < 0x1000 i.e. we we are up-sampling (otherwise results are undefined)
  */
-void audio_upsample_words(int16_t *input, int16_t *output_aligned, uint output_word_count, uint32_t step);
+void audio_upsample_words(int16_t* input, int16_t* output_aligned, uint output_word_count, uint32_t step);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-void audio_upsample_double(int16_t *input, int16_t *output, uint output_count, uint32_t step);
+void audio_upsample_double(int16_t* input, int16_t* output, uint output_count, uint32_t step);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-void audio_complete_connection(audio_connection_t *connection, audio_buffer_pool_t *producer,
-                                      audio_buffer_pool_t *consumer);
+void audio_complete_connection(audio_connection_t* connection, audio_buffer_pool_t* producer,
+                                      audio_buffer_pool_t* consumer);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *get_free_audio_buffer(audio_buffer_pool_t *context, bool block);
+audio_buffer_t* get_free_audio_buffer(audio_buffer_pool_t* context, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-void queue_free_audio_buffer(audio_buffer_pool_t *context, audio_buffer_t *ab);
+void queue_free_audio_buffer(audio_buffer_pool_t* context, audio_buffer_t* ab);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *get_full_audio_buffer(audio_buffer_pool_t *context, bool block);
+audio_buffer_t* get_full_audio_buffer(audio_buffer_pool_t* context, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-void queue_full_audio_buffer(audio_buffer_pool_t *context, audio_buffer_t *ab);
+void queue_full_audio_buffer(audio_buffer_pool_t* context, audio_buffer_t* ab);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  *
  * generally an pico_audio connection uses 3 of the defaults and does the hard work in one of them
  */
-void consumer_pool_give_buffer_default(audio_connection_t *connection, audio_buffer_t *buffer);
+void consumer_pool_give_buffer_default(audio_connection_t* connection, audio_buffer_t* buffer);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *consumer_pool_take_buffer_default(audio_connection_t *connection, bool block);
+audio_buffer_t* consumer_pool_take_buffer_default(audio_connection_t* connection, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-void producer_pool_give_buffer_default(audio_connection_t *connection, audio_buffer_t *buffer);
+void producer_pool_give_buffer_default(audio_connection_t* connection, audio_buffer_t* buffer);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *producer_pool_take_buffer_default(audio_connection_t *connection, bool block);
+audio_buffer_t* producer_pool_take_buffer_default(audio_connection_t* connection, bool block);
 
 enum audio_correction_mode {
     none,
@@ -264,55 +263,55 @@ enum audio_correction_mode {
 
 struct buffer_copying_on_consumer_take_connection {
     struct audio_connection core;
-    audio_buffer_t *current_producer_buffer;
+    audio_buffer_t* current_producer_buffer;
     uint32_t current_producer_buffer_pos;
 };
 
 struct producer_pool_blocking_give_connection {
     audio_connection_t core;
-    audio_buffer_t *current_consumer_buffer;
+    audio_buffer_t* current_consumer_buffer;
     uint32_t current_consumer_buffer_pos;
 };
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *mono_to_mono_consumer_take(audio_connection_t *connection, bool block);
+audio_buffer_t* mono_to_mono_consumer_take(audio_connection_t* connection, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *mono_s8_to_mono_consumer_take(audio_connection_t *connection, bool block);
+audio_buffer_t* mono_s8_to_mono_consumer_take(audio_connection_t* connection, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *stereo_s16_to_stereo_s16_consumer_take(audio_connection_t *connection, bool block);
+audio_buffer_t* stereo_s16_to_stereo_s16_consumer_take(audio_connection_t* connection, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *stereo_s32_to_stereo_s32_consumer_take(audio_connection_t *connection, bool block);
+audio_buffer_t* stereo_s32_to_stereo_s32_consumer_take(audio_connection_t* connection, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *mono_to_stereo_consumer_take(audio_connection_t *connection, bool block);
+audio_buffer_t* mono_to_stereo_consumer_take(audio_connection_t* connection, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-audio_buffer_t *mono_s8_to_stereo_consumer_take(audio_connection_t *connection, bool block);
+audio_buffer_t* mono_s8_to_stereo_consumer_take(audio_connection_t* connection, bool block);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-void stereo_s16_to_stereo_s16_producer_give(audio_connection_t *connection, audio_buffer_t *buffer);
+void stereo_s16_to_stereo_s16_producer_give(audio_connection_t* connection, audio_buffer_t* buffer);
 
 /*! \brief \todo
  *  \ingroup pico_audio
  */
-void stereo_s32_to_stereo_s32_producer_give(audio_connection_t *connection, audio_buffer_t *buffer);
+void stereo_s32_to_stereo_s32_producer_give(audio_connection_t* connection, audio_buffer_t* buffer);
 
 // not worth a separate header for now
 typedef struct __packed pio_audio_channel_config {
@@ -324,5 +323,3 @@ typedef struct __packed pio_audio_channel_config {
 #ifdef __cplusplus
 }
 #endif
-
-#endif //_AUDIO_H
